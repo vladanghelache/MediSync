@@ -2,7 +2,10 @@ package com.medisync.MediSync.entity;
 
 import com.medisync.MediSync.entity.enums.Gender;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -11,6 +14,9 @@ import java.util.List;
 @Entity
 @Table(name = "patients")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Patient {
 
     @Id
@@ -35,7 +41,7 @@ public class Patient {
 
     private String address;
     private String city;
-    private String state;
+    private String county;
     private String country;
 
     @OneToOne(optional = false)
