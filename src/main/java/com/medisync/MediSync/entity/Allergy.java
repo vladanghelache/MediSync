@@ -1,0 +1,26 @@
+package com.medisync.MediSync.entity;
+
+import com.medisync.MediSync.entity.enums.AllergyCategory;
+import jakarta.persistence.*;
+import lombok.Data;
+
+@Entity
+@Table(name = "allergies")
+@Data
+public class Allergy {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String name;
+
+    @Column(unique = true, nullable = false)
+    private String code;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AllergyCategory category;
+
+}
