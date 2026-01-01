@@ -5,6 +5,8 @@ import com.medisync.MediSync.entity.enums.Specialization;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Entity
 @Table(name = "doctors")
 @Data
@@ -34,4 +36,7 @@ public class Doctor {
     @ManyToOne(optional = false)
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
+
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DoctorSchedule> doctorSchedules;
 }
