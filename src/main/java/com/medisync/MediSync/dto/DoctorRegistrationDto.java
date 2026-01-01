@@ -27,4 +27,7 @@ public class DoctorRegistrationDto {
     @NotNull(message = "Department ID is required")
     private Long departmentId;
 
+    @NotNull(message = "Appointment duration is required")
+    private Integer appointmentDuration;
+
 }

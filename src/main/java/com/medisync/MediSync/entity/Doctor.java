@@ -1,5 +1,6 @@
 package com.medisync.MediSync.entity;
 
+import com.medisync.MediSync.entity.enums.AppointmentDuration;
 import com.medisync.MediSync.entity.enums.Specialization;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -21,6 +22,10 @@ public class Doctor {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Specialization specialization;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AppointmentDuration appointmentDuration;
 
     @OneToOne(optional = false)
     @JoinColumn(name = "user_id", referencedColumnName = "id")

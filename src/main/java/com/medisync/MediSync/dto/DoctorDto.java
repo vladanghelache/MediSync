@@ -14,6 +14,7 @@ public class DoctorDto {
     private String specializationLabel;
     private Long departmentId;
     private String departmentName;
+    private Integer appointmentDuration;
 
     public static DoctorDto mapToDto(Doctor doctor) {
         return DoctorDto.builder()
@@ -24,6 +25,7 @@ public class DoctorDto {
                 .specializationLabel(doctor.getSpecialization().getLabel())
                 .departmentId(doctor.getDepartment().getId())
                 .departmentName(doctor.getDepartment().getName())
+                .appointmentDuration(doctor.getAppointmentDuration().getMinutes())
                 .build();
     }
 }
