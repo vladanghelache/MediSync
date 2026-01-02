@@ -3,11 +3,13 @@ package com.medisync.MediSync.entity;
 import com.medisync.MediSync.entity.enums.AllergyCategory;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "allergies")
 @Data
-public class Allergy {
+public class Allergy extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
