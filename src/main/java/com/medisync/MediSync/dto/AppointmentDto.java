@@ -1,8 +1,6 @@
 package com.medisync.MediSync.dto;
 
 import com.medisync.MediSync.entity.Appointment;
-import com.medisync.MediSync.entity.Doctor;
-import com.medisync.MediSync.entity.Patient;
 import com.medisync.MediSync.entity.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -21,6 +19,7 @@ public class AppointmentDto {
     private PatientDto patient;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private MedicalRecordDto medicalRecord;
 
     public static AppointmentDto mapToDto(Appointment appointment) {
         return AppointmentDto.builder()
@@ -32,6 +31,11 @@ public class AppointmentDto {
                 .patient(PatientDto.mapToDto(appointment.getPatient()))
                 .createdAt(appointment.getCreatedAt())
                 .updatedAt(appointment.getUpdatedAt())
+                .medicalRecord(
+                        appointment.getMedicalRecord() != null ?
+                        MedicalRecordDto.mapToDto(appointment.getMedicalRecord()) :
+                        null
+                )
                 .build();
     }
 }
