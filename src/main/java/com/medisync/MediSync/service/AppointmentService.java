@@ -2,17 +2,13 @@ package com.medisync.MediSync.service;
 
 import com.medisync.MediSync.dto.AppointmentBookDto;
 import com.medisync.MediSync.dto.AppointmentDto;
-import com.medisync.MediSync.entity.Appointment;
-import com.medisync.MediSync.entity.Doctor;
-import com.medisync.MediSync.entity.DoctorSchedule;
-import com.medisync.MediSync.entity.Patient;
+import com.medisync.MediSync.dto.MedicalRecordCreateDto;
+import com.medisync.MediSync.dto.MedicalRecordDto;
+import com.medisync.MediSync.entity.*;
 import com.medisync.MediSync.entity.enums.AppointmentDuration;
 import com.medisync.MediSync.entity.enums.AppointmentStatus;
 import com.medisync.MediSync.exception.ResourceNotFoundException;
-import com.medisync.MediSync.repository.AppointmentRepository;
-import com.medisync.MediSync.repository.DoctorRepository;
-import com.medisync.MediSync.repository.DoctorScheduleRepository;
-import com.medisync.MediSync.repository.PatientRepository;
+import com.medisync.MediSync.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +30,7 @@ public class AppointmentService {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final DoctorScheduleRepository doctorScheduleRepository;
+    private final MedicalRecordRepository medicalRecordRepository;
 
     public AppointmentDto findById(Long id) {
         return AppointmentDto.mapToDto(appointmentRepository.findById(id)
@@ -155,6 +152,89 @@ public class AppointmentService {
                 .patient(patient)
                 .build();
 
+        return AppointmentDto.mapToDto(appointmentRepository.save(appointment));
+    }
+
+    @Transactional
+    public MedicalRecordDto completeAppointment(Long appointmentId, MedicalRecordCreateDto medicalRecordCreateDto){
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Appointment with id=" + appointmentId + " not found")
+                );
+
+        if (!appointment.getStatus().equals(AppointmentStatus.SCHEDULED)){
+            throw new IllegalStateException(
+                    "Cannot complete appointment with"
+                            + AppointmentStatus.COMPLETED
+                            + ", " + AppointmentStatus.CANCELLED
+                            + " or " + AppointmentStatus.NO_SHOW + " status."
+            );
+        }
+
+        if (appointment.getMedicalRecord() != null){
+            throw new IllegalStateException("A medical record already exists for this appointment");
+        }
+
+        if (appointment.getAppointmentTime().isAfter(LocalDateTime.now())){
+            throw new IllegalStateException("Cannot complete an appointment that hasn't started yet");
+        }
+
+        MedicalRecord medicalRecord = MedicalRecord.builder()
+                .appointment(appointment)
+                .diagnosis(medicalRecordCreateDto.getDiagnosis())
+                .treatmentPlan(medicalRecordCreateDto.getTreatmentPlan())
+                .prescription(medicalRecordCreateDto.getPrescription())
+                .build();
+
+        medicalRecord = medicalRecordRepository.save(medicalRecord);
+
+        appointment.setStatus(AppointmentStatus.COMPLETED);
+
+        appointmentRepository.save(appointment);
+
+        return MedicalRecordDto.mapToDto(medicalRecord);
+
+    }
+
+    public AppointmentDto cancelAppointment(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment with id=" + appointmentId + " not found"));
+
+        if(!appointment.getStatus().equals(AppointmentStatus.SCHEDULED)){
+            throw new IllegalStateException(
+                    "Cannot complete appointment with"
+                    + AppointmentStatus.COMPLETED
+                    + ", " + AppointmentStatus.CANCELLED
+                    + " or " + AppointmentStatus.NO_SHOW + " status."
+            );
+        }
+
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+        return AppointmentDto.mapToDto(appointmentRepository.save(appointment));
+    }
+
+    public AppointmentDto markNoShow(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment with id=" + appointmentId + " not found"));
+
+        if(!appointment.getStatus().equals(AppointmentStatus.SCHEDULED)){
+            throw new IllegalStateException(
+                    "Cannot complete appointment with"
+                            + AppointmentStatus.COMPLETED
+                            + ", " + AppointmentStatus.CANCELLED
+                            + " or " + AppointmentStatus.NO_SHOW + " status."
+            );
+        }
+
+        if (appointment.getAppointmentTime().plusMinutes(
+                appointment.getDoctor().getAppointmentDuration().getMinutes()
+        ).isAfter(LocalDateTime.now())){
+            throw new IllegalStateException("Cannot mark appointment with "
+                    + AppointmentStatus.NO_SHOW
+                    + " since it's not finished yet");
+        }
+
+        appointment.setStatus(AppointmentStatus.NO_SHOW);
         return AppointmentDto.mapToDto(appointmentRepository.save(appointment));
     }
 }

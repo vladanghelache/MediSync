@@ -38,4 +38,7 @@ public class Appointment extends BaseEntity {
     @JoinColumn(nullable = false, name = "patient_id", referencedColumnName = "id")
     private Patient patient;
 
+    @OneToOne(mappedBy = "appointment")
+    private MedicalRecord medicalRecord;
+
 }

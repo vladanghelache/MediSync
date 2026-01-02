@@ -19,6 +19,8 @@ public class AppointmentDto {
     private AppointmentStatus status;
     private DoctorDto doctor;
     private PatientDto patient;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static AppointmentDto mapToDto(Appointment appointment) {
         return AppointmentDto.builder()
@@ -28,6 +30,8 @@ public class AppointmentDto {
                 .status(appointment.getStatus())
                 .doctor(DoctorDto.mapToDto(appointment.getDoctor()))
                 .patient(PatientDto.mapToDto(appointment.getPatient()))
+                .createdAt(appointment.getCreatedAt())
+                .updatedAt(appointment.getUpdatedAt())
                 .build();
     }
 }
