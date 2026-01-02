@@ -28,15 +28,8 @@ public class MedicalRecord extends BaseEntity{
     @Column(columnDefinition = "TEXT")
     private String prescription;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
     @OneToOne(optional = false)
     @JoinColumn(name = "appointment_id", unique = true)
     private Appointment appointment;
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
 }
