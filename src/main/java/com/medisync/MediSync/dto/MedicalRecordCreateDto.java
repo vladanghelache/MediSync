@@ -17,7 +17,6 @@ public class MedicalRecordCreateDto {
     @Size(max = 255, message = "Diagnosis must be under 255 characters")
     private String diagnosis;
 
-    @NotBlank(message = "Treatment plan is required")
     private String treatmentPlan;
 
     private String prescription;
