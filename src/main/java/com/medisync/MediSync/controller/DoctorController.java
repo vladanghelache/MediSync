@@ -2,10 +2,13 @@ package com.medisync.MediSync.controller;
 
 import com.medisync.MediSync.dto.AppointmentDto;
 import com.medisync.MediSync.dto.DoctorDto;
+import com.medisync.MediSync.dto.DoctorRegistrationDto;
 import com.medisync.MediSync.service.AppointmentService;
 import com.medisync.MediSync.service.DoctorService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,5 +49,10 @@ public class DoctorController {
             @PathVariable Long doctorId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(appointmentService.getAvailableSlots(doctorId, date));
+    }
+
+    @PostMapping
+    public ResponseEntity<DoctorDto> registerDoctor(@Valid @RequestBody DoctorRegistrationDto doctorRegistrationDto) {
+        return new ResponseEntity<>(doctorService.registerDoctor(doctorRegistrationDto), HttpStatus.CREATED);
     }
 }

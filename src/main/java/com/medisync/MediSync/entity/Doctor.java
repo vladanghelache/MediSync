@@ -3,8 +3,11 @@ package com.medisync.MediSync.entity;
 import com.medisync.MediSync.entity.enums.AppointmentDuration;
 import com.medisync.MediSync.entity.enums.Specialization;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
@@ -12,6 +15,9 @@ import java.util.List;
 @Entity
 @Table(name = "doctors")
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Doctor extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

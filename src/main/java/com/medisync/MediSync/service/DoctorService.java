@@ -1,11 +1,20 @@
 package com.medisync.MediSync.service;
 
 import com.medisync.MediSync.dto.DoctorDto;
+import com.medisync.MediSync.dto.DoctorRegistrationDto;
+import com.medisync.MediSync.entity.Department;
 import com.medisync.MediSync.entity.Doctor;
+import com.medisync.MediSync.entity.User;
+import com.medisync.MediSync.entity.enums.AppointmentDuration;
+import com.medisync.MediSync.entity.enums.Role;
+import com.medisync.MediSync.entity.enums.Specialization;
 import com.medisync.MediSync.exception.ResourceNotFoundException;
 import com.medisync.MediSync.repository.DepartmentRepository;
 import com.medisync.MediSync.repository.DoctorRepository;
+import com.medisync.MediSync.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,7 +23,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DoctorService {
     private final DoctorRepository doctorRepository;
+    private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public DoctorDto getDoctorById(Long id) {
         Doctor doctor = doctorRepository.findById(id)
@@ -32,5 +43,37 @@ public class DoctorService {
 
     public List<DoctorDto> getAllDoctors() {
         return doctorRepository.findAll().stream().map(DoctorDto::mapToDto).toList();
+    }
+
+    @Transactional
+    public  DoctorDto registerDoctor(DoctorRegistrationDto doctorRegistrationDto) {
+
+        if (userRepository.existsByEmail(doctorRegistrationDto.getEmail())){
+            throw new IllegalStateException("There is already an account associated with this email: " + doctorRegistrationDto.getEmail());
+        }
+
+        User user = User.builder()
+                .email(doctorRegistrationDto.getEmail())
+                .password(passwordEncoder.encode(doctorRegistrationDto.getPassword()))
+                .role(Role.ROLE_DOCTOR)
+                .build();
+
+        user = userRepository.save(user);
+
+        Department department = departmentRepository.findById(doctorRegistrationDto.getDepartmentId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Department with id=" + doctorRegistrationDto.getDepartmentId() + " not found"
+                ));
+
+        Doctor doctor = Doctor.builder()
+                .firstName(doctorRegistrationDto.getFirstName())
+                .lastName(doctorRegistrationDto.getLastName())
+                .specialization(Specialization.valueOf(doctorRegistrationDto.getSpecialization().toUpperCase()))
+                .appointmentDuration(AppointmentDuration.valueOf(doctorRegistrationDto.getAppointmentDuration().toUpperCase()))
+                .user(user)
+                .department(department)
+                .build();
+
+        return DoctorDto.mapToDto(doctorRepository.save(doctor));
     }
 }

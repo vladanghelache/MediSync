@@ -6,6 +6,8 @@ import com.medisync.MediSync.dto.PatientUpdateDto;
 import com.medisync.MediSync.entity.Allergy;
 import com.medisync.MediSync.entity.Patient;
 import com.medisync.MediSync.entity.User;
+import com.medisync.MediSync.entity.enums.Gender;
+import com.medisync.MediSync.entity.enums.Role;
 import com.medisync.MediSync.exception.ResourceNotFoundException;
 import com.medisync.MediSync.repository.AllergyRepository;
 import com.medisync.MediSync.repository.PatientRepository;
@@ -28,16 +30,22 @@ public class PatientService {
 
     @Transactional
     public void registerPatient(PatientRegistrationDto patientRegistrationDto) {
+
+        if (userRepository.existsByEmail(patientRegistrationDto.getEmail())){
+            throw new IllegalStateException("There is already an account associated with this email: " + patientRegistrationDto.getEmail());
+        }
+
         User user = User.builder()
                 .email(patientRegistrationDto.getEmail())
                 .password(passwordEncoder.encode(patientRegistrationDto.getPassword()))
+                .role(Role.ROLE_PATIENT)
                 .build();
         userRepository.save(user);
 
         Patient patient = Patient.builder()
                 .firstName(patientRegistrationDto.getFirstName())
                 .lastName(patientRegistrationDto.getLastName())
-                .gender(patientRegistrationDto.getGender())
+                .gender(Gender.valueOf(patientRegistrationDto.getGender().toUpperCase()))
                 .phoneNumber(patientRegistrationDto.getPhoneNumber())
                 .dateOfBirth(patientRegistrationDto.getDateOfBirth())
                 .address(patientRegistrationDto.getAddress())

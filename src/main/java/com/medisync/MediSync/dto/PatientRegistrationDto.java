@@ -2,11 +2,14 @@ package com.medisync.MediSync.dto;
 
 
 import com.medisync.MediSync.entity.enums.Gender;
+import com.medisync.MediSync.validation.ValueOfEnum;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 public class PatientRegistrationDto {
@@ -35,7 +38,8 @@ public class PatientRegistrationDto {
     private LocalDate dateOfBirth;
 
     @NotNull(message = "Gender is required")
-    private Gender gender;
+    @ValueOfEnum(enumClass = Gender.class, message = "Gender must be one of the following: MALE, FEMALE or OTHER")
+    private String gender;
 
     private List<Long> allergyIds;
 

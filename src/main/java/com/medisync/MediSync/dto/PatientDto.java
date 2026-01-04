@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -23,6 +24,8 @@ public class PatientDto {
     private String city;
     private String county;
     private String country;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static PatientDto mapToDto(Patient patient) {
         return PatientDto.builder()
@@ -37,6 +40,8 @@ public class PatientDto {
                 .city(patient.getCity())
                 .county(patient.getCounty())
                 .country(patient.getCountry())
+                .createdAt(patient.getCreatedAt())
+                .updatedAt(patient.getUpdatedAt())
                 .build();
     }
 }
