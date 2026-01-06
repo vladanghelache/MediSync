@@ -2,13 +2,18 @@ package com.medisync.MediSync.entity;
 
 import com.medisync.MediSync.entity.enums.AllergyCategory;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "allergies")
 @Data
+@SuperBuilder
+@NoArgsConstructor
 public class Allergy extends BaseEntity{
 
     @Id
