@@ -3,13 +3,16 @@ package com.medisync.MediSync.service;
 import com.medisync.MediSync.dto.DoctorDto;
 import com.medisync.MediSync.dto.DoctorRegistrationDto;
 import com.medisync.MediSync.dto.DoctorUpdateDto;
+import com.medisync.MediSync.entity.Appointment;
 import com.medisync.MediSync.entity.Department;
 import com.medisync.MediSync.entity.Doctor;
 import com.medisync.MediSync.entity.User;
 import com.medisync.MediSync.entity.enums.AppointmentDuration;
+import com.medisync.MediSync.entity.enums.AppointmentStatus;
 import com.medisync.MediSync.entity.enums.Role;
 import com.medisync.MediSync.entity.enums.Specialization;
 import com.medisync.MediSync.exception.ResourceNotFoundException;
+import com.medisync.MediSync.repository.AppointmentRepository;
 import com.medisync.MediSync.repository.DepartmentRepository;
 import com.medisync.MediSync.repository.DoctorRepository;
 import com.medisync.MediSync.repository.UserRepository;
@@ -27,6 +30,7 @@ public class DoctorService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AppointmentRepository appointmentRepository;
 
     public DoctorDto getDoctorById(Long id) {
         Doctor doctor = doctorRepository.findById(id)
@@ -35,16 +39,18 @@ public class DoctorService {
         return DoctorDto.mapToDto(doctor);
     }
 
-    public List<DoctorDto> getDoctorByDepartmentId(Long departmentId) {
+    public List<DoctorDto> getDoctors(Long departmentId, boolean deactivated) {
+        if (departmentId == null) {
+            return doctorRepository.findAllByUserIsActive(deactivated).stream()
+                    .map(DoctorDto::mapToDto).toList();
+        }
         if(!departmentRepository.existsById(departmentId)) {
             throw new ResourceNotFoundException("Department with id " + departmentId + " not found");
         }
-        return doctorRepository.findByDepartmentId(departmentId).stream().map(DoctorDto::mapToDto).toList();
+        return doctorRepository.findByDepartmentIdAndUserIsActive(departmentId, deactivated).stream()
+                .map(DoctorDto::mapToDto).toList();
     }
 
-    public List<DoctorDto> getAllDoctors() {
-        return doctorRepository.findAll().stream().map(DoctorDto::mapToDto).toList();
-    }
 
     @Transactional
     public  DoctorDto registerDoctor(DoctorRegistrationDto doctorRegistrationDto) {
@@ -57,6 +63,7 @@ public class DoctorService {
                 .email(doctorRegistrationDto.getEmail())
                 .password(passwordEncoder.encode(doctorRegistrationDto.getPassword()))
                 .role(Role.ROLE_DOCTOR)
+                .isActive(true)
                 .build();
 
         user = userRepository.save(user);
@@ -96,4 +103,42 @@ public class DoctorService {
 
         return DoctorDto.mapToDto(doctorRepository.save(doctor));
     }
+
+    @Transactional
+    public void deactivateDoctor(Long doctorId) {
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor with id " + doctorId + " not found"));
+
+        User user = doctor.getUser();
+        if(!user.getIsActive()){
+            throw new IllegalStateException("User is already not active for doctor with id " + doctorId);
+        }
+
+        List<Appointment> scheduledAppointments = appointmentRepository.findAllByDoctorIdAndStatus(
+                doctorId,
+                AppointmentStatus.SCHEDULED
+        );
+
+        for (Appointment appointment : scheduledAppointments) {
+            appointment.setStatus(AppointmentStatus.CANCELLED);
+        }
+
+        appointmentRepository.saveAll(scheduledAppointments);
+
+        user.setIsActive(false);
+        userRepository.save(user);
+    }
+
+    public void activateDoctor(Long doctorId) {
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor with id " + doctorId + " not found"));
+
+        User user = doctor.getUser();
+        if(user.getIsActive()){
+            throw new IllegalStateException("User is already active for doctor with id " + doctorId);
+        }
+        user.setIsActive(true);
+        userRepository.save(user);
+    }
+
 }

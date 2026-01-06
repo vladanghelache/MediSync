@@ -24,7 +24,8 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
-    private Boolean enabled;
+    @Column(nullable = false)
+    private Boolean isActive;
 
     @Enumerated(EnumType.STRING)
     private Role role;

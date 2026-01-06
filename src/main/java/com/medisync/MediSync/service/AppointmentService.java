@@ -59,6 +59,10 @@ public class AppointmentService {
             return Collections.emptyList();
         }
 
+        if (!doctorRepository.existsByIdAndUserIsActive(doctorId, true)) {
+            throw new ResourceNotFoundException("No active doctor with id=" + doctorId + " found.");
+        }
+
         DoctorSchedule doctorSchedule = doctorScheduleRepository
                 .findByDoctorIdAndDayOfWeek(doctorId, date.getDayOfWeek())
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor is not working on " + date.getDayOfWeek()));
@@ -102,6 +106,10 @@ public class AppointmentService {
 
         Doctor doctor = doctorRepository.findByIdWithLock(appointmentBookDto.getDoctorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor with id=" + appointmentBookDto.getDoctorId() + " not found."));
+
+        if (!doctor.getUser().getIsActive()) {
+            throw new IllegalStateException("Doctor account is not active.");
+        }
 
         AppointmentDuration appointmentDuration = doctor.getAppointmentDuration();
 

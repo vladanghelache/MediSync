@@ -45,4 +45,16 @@ public class PatientController {
     public ResponseEntity<List<AppointmentDto>> getAppointmentsByPatientId(@PathVariable Long patientId) {
         return ResponseEntity.ok(appointmentService.getPatientAppointments(patientId));
     }
+
+    @PutMapping("/{patientId}/deactivate")
+    public ResponseEntity<Void> deactivatePatient(@PathVariable Long patientId) {
+        patientService.deactivatePatient(patientId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PutMapping("/{patientId}/activate")
+    public ResponseEntity<Void> activatePatient(@PathVariable Long patientId) {
+        patientService.activatePatient(patientId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

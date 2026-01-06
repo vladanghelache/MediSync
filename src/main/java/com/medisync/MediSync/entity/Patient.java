@@ -50,12 +50,4 @@ public class Patient extends BaseEntity {
     @ManyToMany
     @JoinTable(name = "patients_allergies")
     private List<Allergy> allergies;
-
-    @Transient
-    private Integer getAge(){
-        if (dateOfBirth == null){
-            return null;
-        }
-        return Period.between(dateOfBirth, LocalDate.now()).getYears();
-    }
 }

@@ -26,12 +26,9 @@ public class DoctorController {
     private final AppointmentService appointmentService;
 
     @GetMapping
-    public ResponseEntity<List<DoctorDto>> getDoctors(@RequestParam(required = false) Long departmentId) {
-        if  (departmentId == null) {
-            return ResponseEntity.ok(doctorService.getAllDoctors());
-        }
-        List<DoctorDto> doctors = doctorService.getDoctorByDepartmentId(departmentId);
-        return ResponseEntity.ok(doctors);
+    public ResponseEntity<List<DoctorDto>> getDoctors(@RequestParam(required = false) Long departmentId,
+                                                      @RequestParam(defaultValue = "false") boolean deactivated) {
+        return ResponseEntity.ok(doctorService.getDoctors(departmentId, deactivated));
     }
 
     @GetMapping("/{doctorId}")
@@ -61,4 +58,18 @@ public class DoctorController {
     public ResponseEntity<DoctorDto> updateDoctor(@PathVariable Long doctorId, @Valid @RequestBody DoctorUpdateDto doctorUpdateDto) {
         return ResponseEntity.ok(doctorService.updateDoctor(doctorId, doctorUpdateDto));
     }
+
+    @PutMapping("/{doctorId}/deactivate")
+    public ResponseEntity<DoctorDto> deactivateDoctor(@PathVariable Long doctorId) {
+        doctorService.deactivateDoctor(doctorId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PutMapping("/{doctorId}/activate")
+    public ResponseEntity<DoctorDto> activate(@PathVariable Long doctorId) {
+        doctorService.activateDoctor(doctorId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+
 }

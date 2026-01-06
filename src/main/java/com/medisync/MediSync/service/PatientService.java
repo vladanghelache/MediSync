@@ -4,12 +4,15 @@ import com.medisync.MediSync.dto.PatientDto;
 import com.medisync.MediSync.dto.PatientRegistrationDto;
 import com.medisync.MediSync.dto.PatientUpdateDto;
 import com.medisync.MediSync.entity.Allergy;
+import com.medisync.MediSync.entity.Appointment;
 import com.medisync.MediSync.entity.Patient;
 import com.medisync.MediSync.entity.User;
+import com.medisync.MediSync.entity.enums.AppointmentStatus;
 import com.medisync.MediSync.entity.enums.Gender;
 import com.medisync.MediSync.entity.enums.Role;
 import com.medisync.MediSync.exception.ResourceNotFoundException;
 import com.medisync.MediSync.repository.AllergyRepository;
+import com.medisync.MediSync.repository.AppointmentRepository;
 import com.medisync.MediSync.repository.PatientRepository;
 import com.medisync.MediSync.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -27,6 +30,7 @@ public class PatientService {
     private final AllergyRepository allergyRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AppointmentRepository appointmentRepository;
 
     @Transactional
     public void registerPatient(PatientRegistrationDto patientRegistrationDto) {
@@ -39,6 +43,7 @@ public class PatientService {
                 .email(patientRegistrationDto.getEmail())
                 .password(passwordEncoder.encode(patientRegistrationDto.getPassword()))
                 .role(Role.ROLE_PATIENT)
+                .isActive(true)
                 .build();
         userRepository.save(user);
 
@@ -97,5 +102,43 @@ public class PatientService {
 
         patientRepository.save(patient);
         return PatientDto.mapToDto(patient);
+    }
+
+    @Transactional
+    public void deactivatePatient(Long patientId) {
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient with id=" + patientId + " not found!"));
+
+        User user = patient.getUser();
+
+        if (!user.getIsActive()){
+            throw new IllegalStateException("User is already not active for patient with id=" + patientId);
+        }
+
+        List<Appointment> scheduledAppointments = appointmentRepository.
+                findAllByPatientIdAndStatus(patientId, AppointmentStatus.SCHEDULED);
+
+        for (Appointment appointment : scheduledAppointments) {
+            appointment.setStatus(AppointmentStatus.CANCELLED);
+        }
+
+        appointmentRepository.saveAll(scheduledAppointments);
+
+        user.setIsActive(false);
+        userRepository.save(user);
+    }
+
+    public void activatePatient(Long patientId) {
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient with id=" + patientId + " not found!"));
+
+        User user = patient.getUser();
+
+        if (user.getIsActive()){
+            throw new IllegalStateException("User is already active for patient with id=" + patientId);
+        }
+
+        user.setIsActive(true);
+        userRepository.save(user);
     }
 }
