@@ -3,6 +3,7 @@ package com.medisync.MediSync.controller;
 import com.medisync.MediSync.dto.AppointmentDto;
 import com.medisync.MediSync.dto.DoctorDto;
 import com.medisync.MediSync.dto.DoctorRegistrationDto;
+import com.medisync.MediSync.dto.DoctorUpdateDto;
 import com.medisync.MediSync.service.AppointmentService;
 import com.medisync.MediSync.service.DoctorService;
 import jakarta.validation.Valid;
@@ -54,5 +55,10 @@ public class DoctorController {
     @PostMapping
     public ResponseEntity<DoctorDto> registerDoctor(@Valid @RequestBody DoctorRegistrationDto doctorRegistrationDto) {
         return new ResponseEntity<>(doctorService.registerDoctor(doctorRegistrationDto), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{doctorId}")
+    public ResponseEntity<DoctorDto> updateDoctor(@PathVariable Long doctorId, @Valid @RequestBody DoctorUpdateDto doctorUpdateDto) {
+        return ResponseEntity.ok(doctorService.updateDoctor(doctorId, doctorUpdateDto));
     }
 }

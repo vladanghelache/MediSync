@@ -2,6 +2,7 @@ package com.medisync.MediSync.service;
 
 import com.medisync.MediSync.dto.DoctorDto;
 import com.medisync.MediSync.dto.DoctorRegistrationDto;
+import com.medisync.MediSync.dto.DoctorUpdateDto;
 import com.medisync.MediSync.entity.Department;
 import com.medisync.MediSync.entity.Doctor;
 import com.medisync.MediSync.entity.User;
@@ -61,7 +62,7 @@ public class DoctorService {
         user = userRepository.save(user);
 
         Department department = departmentRepository.findById(doctorRegistrationDto.getDepartmentId())
-                .orElseThrow(() -> new ResourceNotFoundException(
+                .orElseThrow(() -> new IllegalArgumentException(
                         "Department with id=" + doctorRegistrationDto.getDepartmentId() + " not found"
                 ));
 
@@ -73,6 +74,25 @@ public class DoctorService {
                 .user(user)
                 .department(department)
                 .build();
+
+        return DoctorDto.mapToDto(doctorRepository.save(doctor));
+    }
+
+    @Transactional
+    public DoctorDto updateDoctor(Long doctorId, DoctorUpdateDto doctorUpdateDto){
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor with id " + doctorId + " not found"));
+
+        Department department = departmentRepository.findById(doctorUpdateDto.getDepartmentId())
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "Department with id=" + doctorUpdateDto.getDepartmentId() + " not found"
+                        ));
+
+        doctor.setFirstName(doctorUpdateDto.getFirstName());
+        doctor.setLastName(doctorUpdateDto.getLastName());
+        doctor.setSpecialization(Specialization.valueOf(doctorUpdateDto.getSpecialization().toUpperCase()));
+        doctor.setAppointmentDuration(AppointmentDuration.valueOf(doctorUpdateDto.getAppointmentDuration().toUpperCase()));
+        doctor.setDepartment(department);
 
         return DoctorDto.mapToDto(doctorRepository.save(doctor));
     }
