@@ -227,7 +227,7 @@ public class AppointmentService {
 
         if(!appointment.getStatus().equals(AppointmentStatus.SCHEDULED)){
             throw new IllegalStateException(
-                    "Cannot complete appointment with"
+                    "Cannot mark as NO_SHOW appointment with"
                             + AppointmentStatus.COMPLETED
                             + ", " + AppointmentStatus.CANCELLED
                             + " or " + AppointmentStatus.NO_SHOW + " status."

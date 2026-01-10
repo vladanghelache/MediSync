@@ -4,12 +4,14 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "departments")
 @Data
 @NoArgsConstructor
+@SuperBuilder
 public class Department extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

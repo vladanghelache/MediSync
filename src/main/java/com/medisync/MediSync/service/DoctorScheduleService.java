@@ -7,7 +7,6 @@ import com.medisync.MediSync.entity.DoctorSchedule;
 import com.medisync.MediSync.exception.ResourceNotFoundException;
 import com.medisync.MediSync.repository.DoctorRepository;
 import com.medisync.MediSync.repository.DoctorScheduleRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
