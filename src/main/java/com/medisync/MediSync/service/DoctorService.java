@@ -62,7 +62,7 @@ public class DoctorService {
         User user = User.builder()
                 .email(doctorRegistrationDto.getEmail())
                 .password(passwordEncoder.encode(doctorRegistrationDto.getPassword()))
-                .role(Role.ROLE_DOCTOR)
+                .role(Role.DOCTOR)
                 .isActive(true)
                 .build();
 

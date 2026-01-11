@@ -42,7 +42,7 @@ public class PatientService {
         User user = User.builder()
                 .email(patientRegistrationDto.getEmail())
                 .password(passwordEncoder.encode(patientRegistrationDto.getPassword()))
-                .role(Role.ROLE_PATIENT)
+                .role(Role.PATIENT)
                 .isActive(true)
                 .build();
         userRepository.save(user);
