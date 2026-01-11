@@ -35,6 +35,7 @@ class AppointmentServiceTest {
     @Mock private DoctorRepository doctorRepository;
     @Mock private DoctorScheduleRepository doctorScheduleRepository;
     @Mock private MedicalRecordRepository medicalRecordRepository;
+    @Mock private UserRepository userRepository;
 
     @InjectMocks
     private AppointmentService appointmentService;
@@ -87,14 +88,16 @@ class AppointmentServiceTest {
     @Test
     void findById_Success() {
         when(appointmentRepository.findById(100L)).thenReturn(Optional.of(appointment));
-        AppointmentDto result = appointmentService.findById(100L);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(appointment.getDoctor().getUser()));
+
+        AppointmentDto result = appointmentService.findById(100L, appointment.getDoctor().getUser().getEmail());
         assertThat(result.getId()).isEqualTo(100L);
     }
 
     @Test
     void findById_NotFound() {
         when(appointmentRepository.findById(999L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> appointmentService.findById(999L))
+        assertThatThrownBy(() -> appointmentService.findById(999L, appointment.getDoctor().getUser().getEmail()))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -354,7 +357,7 @@ class AppointmentServiceTest {
     @Test
     void completeAppointment_NotFound() {
         when(appointmentRepository.findById(99L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> appointmentService.completeAppointment(99L, new MedicalRecordCreateDto()))
+        assertThatThrownBy(() -> appointmentService.completeAppointment(99L, new MedicalRecordCreateDto(), appointment.getDoctor().getUser().getEmail()))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -362,8 +365,9 @@ class AppointmentServiceTest {
     void completeAppointment_WrongStatus() {
         appointment.setStatus(AppointmentStatus.CANCELLED);
         when(appointmentRepository.findById(100L)).thenReturn(Optional.of(appointment));
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(appointment.getDoctor().getUser()));
 
-        assertThatThrownBy(() -> appointmentService.completeAppointment(100L, new MedicalRecordCreateDto()))
+        assertThatThrownBy(() -> appointmentService.completeAppointment(100L, new MedicalRecordCreateDto(), appointment.getDoctor().getUser().getEmail()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Cannot complete appointment with" +
                         AppointmentStatus.COMPLETED + ", " +
@@ -376,7 +380,9 @@ class AppointmentServiceTest {
         appointment.setMedicalRecord(new MedicalRecord());
         when(appointmentRepository.findById(100L)).thenReturn(Optional.of(appointment));
 
-        assertThatThrownBy(() -> appointmentService.completeAppointment(100L, new MedicalRecordCreateDto()))
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(appointment.getDoctor().getUser()));
+
+        assertThatThrownBy(() -> appointmentService.completeAppointment(100L, new MedicalRecordCreateDto(), appointment.getDoctor().getUser().getEmail()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("A medical record already exists for this appointment");
     }
@@ -385,8 +391,9 @@ class AppointmentServiceTest {
     void completeAppointment_FutureDate_CannotComplete() {
         appointment.setAppointmentTime(LocalDateTime.now().plusDays(1));
         when(appointmentRepository.findById(100L)).thenReturn(Optional.of(appointment));
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(appointment.getDoctor().getUser()));
 
-        assertThatThrownBy(() -> appointmentService.completeAppointment(100L, new MedicalRecordCreateDto()))
+        assertThatThrownBy(() -> appointmentService.completeAppointment(100L, new MedicalRecordCreateDto(), appointment.getDoctor().getUser().getEmail()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Cannot complete an appointment that hasn't started yet");
     }
@@ -397,8 +404,10 @@ class AppointmentServiceTest {
         when(appointmentRepository.findById(100L)).thenReturn(Optional.of(appointment));
         when(medicalRecordRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
 
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(appointment.getDoctor().getUser()));
+
         MedicalRecordCreateDto dto = new MedicalRecordCreateDto("Flu", "Rest", "Meds");
-        MedicalRecordDto result = appointmentService.completeAppointment(100L, dto);
+        MedicalRecordDto result = appointmentService.completeAppointment(100L, dto, appointment.getDoctor().getUser().getEmail());
 
         assertThat(result.getDiagnosis()).isEqualTo("Flu");
         assertThat(appointment.getStatus()).isEqualTo(AppointmentStatus.COMPLETED);
@@ -409,16 +418,18 @@ class AppointmentServiceTest {
     @Test
     void cancelAppointment_NotFound() {
         when(appointmentRepository.findById(99L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> appointmentService.cancelAppointment(99L))
+        assertThatThrownBy(() -> appointmentService.cancelAppointment(99L, appointment.getPatient().getUser().getEmail()))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void cancelAppointment_WrongStatus() {
         appointment.setStatus(AppointmentStatus.COMPLETED);
+
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(appointment.getPatient().getUser()));
         when(appointmentRepository.findById(100L)).thenReturn(Optional.of(appointment));
 
-        assertThatThrownBy(() -> appointmentService.cancelAppointment(100L))
+        assertThatThrownBy(() -> appointmentService.cancelAppointment(100L, appointment.getPatient().getUser().getEmail()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Cannot complete appointment with" +
                         AppointmentStatus.COMPLETED + ", " +
@@ -430,8 +441,9 @@ class AppointmentServiceTest {
     void cancelAppointment_Success() {
         when(appointmentRepository.findById(100L)).thenReturn(Optional.of(appointment));
         when(appointmentRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(appointment.getPatient().getUser()));
 
-        AppointmentDto result = appointmentService.cancelAppointment(100L);
+        AppointmentDto result = appointmentService.cancelAppointment(100L, appointment.getPatient().getUser().getEmail());
         assertThat(result.getStatus()).isEqualTo(AppointmentStatus.CANCELLED);
     }
 
@@ -440,7 +452,7 @@ class AppointmentServiceTest {
     @Test
     void markNoShow_NotFound() {
         when(appointmentRepository.findById(99L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> appointmentService.markNoShow(99L))
+        assertThatThrownBy(() -> appointmentService.markNoShow(99L, appointment.getDoctor().getUser().getEmail()))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -448,8 +460,9 @@ class AppointmentServiceTest {
     void markNoShow_WrongStatus() {
         appointment.setStatus(AppointmentStatus.CANCELLED);
         when(appointmentRepository.findById(100L)).thenReturn(Optional.of(appointment));
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(appointment.getDoctor().getUser()));
 
-        assertThatThrownBy(() -> appointmentService.markNoShow(100L))
+        assertThatThrownBy(() -> appointmentService.markNoShow(100L, appointment.getDoctor().getUser().getEmail()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Cannot mark as NO_SHOW appointment with" +
                         AppointmentStatus.COMPLETED + ", " +
@@ -461,8 +474,9 @@ class AppointmentServiceTest {
     void markNoShow_NotFinishedYet() {
         appointment.setAppointmentTime(LocalDateTime.now().minusMinutes(10));
         when(appointmentRepository.findById(100L)).thenReturn(Optional.of(appointment));
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(appointment.getDoctor().getUser()));
 
-        assertThatThrownBy(() -> appointmentService.markNoShow(100L))
+        assertThatThrownBy(() -> appointmentService.markNoShow(100L, appointment.getDoctor().getUser().getEmail()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Cannot mark appointment with " +
                         AppointmentStatus.NO_SHOW +
@@ -474,8 +488,9 @@ class AppointmentServiceTest {
         appointment.setAppointmentTime(LocalDateTime.now().minusHours(1));
         when(appointmentRepository.findById(100L)).thenReturn(Optional.of(appointment));
         when(appointmentRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(appointment.getDoctor().getUser()));
 
-        AppointmentDto result = appointmentService.markNoShow(100L);
+        AppointmentDto result = appointmentService.markNoShow(100L, appointment.getDoctor().getUser().getEmail());
         assertThat(result.getStatus()).isEqualTo(AppointmentStatus.NO_SHOW);
     }
 }

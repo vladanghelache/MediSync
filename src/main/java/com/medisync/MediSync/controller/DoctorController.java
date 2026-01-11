@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -38,6 +39,7 @@ public class DoctorController {
     }
 
     @GetMapping("/{doctorId}/appointments")
+    @PreAuthorize("hasAnyRole('DOCTOR, ADMIN')")
     public ResponseEntity<List<AppointmentDto>> getAppointmentsByDoctorId(@PathVariable Long doctorId) {
         return ResponseEntity.ok(appointmentService.getDoctorAppointments(doctorId));
     }
@@ -50,22 +52,26 @@ public class DoctorController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DoctorDto> registerDoctor(@Valid @RequestBody DoctorRegistrationDto doctorRegistrationDto) {
         return new ResponseEntity<>(doctorService.registerDoctor(doctorRegistrationDto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{doctorId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DoctorDto> updateDoctor(@PathVariable Long doctorId, @Valid @RequestBody DoctorUpdateDto doctorUpdateDto) {
         return ResponseEntity.ok(doctorService.updateDoctor(doctorId, doctorUpdateDto));
     }
 
     @PutMapping("/{doctorId}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DoctorDto> deactivateDoctor(@PathVariable Long doctorId) {
         doctorService.deactivateDoctor(doctorId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PutMapping("/{doctorId}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DoctorDto> activate(@PathVariable Long doctorId) {
         doctorService.activateDoctor(doctorId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

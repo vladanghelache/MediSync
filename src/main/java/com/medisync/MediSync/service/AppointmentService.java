@@ -7,6 +7,7 @@ import com.medisync.MediSync.dto.MedicalRecordDto;
 import com.medisync.MediSync.entity.*;
 import com.medisync.MediSync.entity.enums.AppointmentDuration;
 import com.medisync.MediSync.entity.enums.AppointmentStatus;
+import com.medisync.MediSync.entity.enums.Role;
 import com.medisync.MediSync.exception.ResourceNotFoundException;
 import com.medisync.MediSync.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -31,10 +32,26 @@ public class AppointmentService {
     private final DoctorRepository doctorRepository;
     private final DoctorScheduleRepository doctorScheduleRepository;
     private final MedicalRecordRepository medicalRecordRepository;
+    private final UserRepository userRepository;
 
-    public AppointmentDto findById(Long id) {
-        return AppointmentDto.mapToDto(appointmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment with id=" + id + " not found.")));
+    public AppointmentDto findById(Long id, String currentUserEmail) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment with id=" + id + " not found."));
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+        boolean isOwnerPatient = appointment.getPatient().getUser().getEmail().equals(currentUserEmail);
+        boolean isAssignedDoctor = appointment.getDoctor().getUser().getEmail().equals(currentUserEmail);
+
+        if (!isAdmin && !isOwnerPatient && !isAssignedDoctor) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You are not authorized to access this appointment."
+            );
+        }
+
+        return AppointmentDto.mapToDto(appointment);
     }
 
     public List<AppointmentDto> getPatientAppointments(Long patientId) {
@@ -164,11 +181,22 @@ public class AppointmentService {
     }
 
     @Transactional
-    public MedicalRecordDto completeAppointment(Long appointmentId, MedicalRecordCreateDto medicalRecordCreateDto){
+    public MedicalRecordDto completeAppointment(Long appointmentId, MedicalRecordCreateDto medicalRecordCreateDto, String currentUserEmail){
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Appointment with id=" + appointmentId + " not found")
                 );
+
+        userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        boolean isAssignedDoctor = appointment.getDoctor().getUser().getEmail().equals(currentUserEmail);
+
+        if (!isAssignedDoctor) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You are not authorized to complete this appointment."
+            );
+        }
 
         if (!appointment.getStatus().equals(AppointmentStatus.SCHEDULED)){
             throw new IllegalStateException(
@@ -204,9 +232,24 @@ public class AppointmentService {
 
     }
 
-    public AppointmentDto cancelAppointment(Long appointmentId) {
+    public AppointmentDto cancelAppointment(Long appointmentId, String currentUserEmail) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment with id=" + appointmentId + " not found"));
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+
+        boolean isOwnerPatient = appointment.getPatient().getUser().getEmail().equals(currentUserEmail);
+
+        boolean isAssignedDoctor = appointment.getDoctor().getUser().getEmail().equals(currentUserEmail);
+
+        if (!isAdmin && !isOwnerPatient && !isAssignedDoctor) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You are not authorized to cancel this appointment."
+            );
+        }
 
         if(!appointment.getStatus().equals(AppointmentStatus.SCHEDULED)){
             throw new IllegalStateException(
@@ -221,9 +264,22 @@ public class AppointmentService {
         return AppointmentDto.mapToDto(appointmentRepository.save(appointment));
     }
 
-    public AppointmentDto markNoShow(Long appointmentId) {
+    public AppointmentDto markNoShow(Long appointmentId, String currentUserEmail) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment with id=" + appointmentId + " not found"));
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+
+        boolean isAssignedDoctor = appointment.getDoctor().getUser().getEmail().equals(currentUserEmail);
+
+        if (!isAdmin && !isAssignedDoctor) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You are not authorized to update this appointment."
+            );
+        }
 
         if(!appointment.getStatus().equals(AppointmentStatus.SCHEDULED)){
             throw new IllegalStateException(

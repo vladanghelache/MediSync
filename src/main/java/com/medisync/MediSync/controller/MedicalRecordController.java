@@ -7,6 +7,7 @@ import com.medisync.MediSync.service.MedicalRecordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,6 +17,7 @@ public class MedicalRecordController {
     private final MedicalRecordService medicalRecordService;
 
     @PutMapping("/{medicalRecordId}")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<MedicalRecordDto> updateMedicalRecord(
             @PathVariable Long medicalRecordId,
             @Valid @RequestBody MedicalRecordCreateDto medicalRecordCreateDto
@@ -24,6 +26,7 @@ public class MedicalRecordController {
     }
 
     @DeleteMapping("/{medicalRecordId}")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<Void> deleteMedicalRecord(@PathVariable Long medicalRecordId) {
         medicalRecordService.deleteMedicalRecord(medicalRecordId);
         return ResponseEntity.noContent().build();

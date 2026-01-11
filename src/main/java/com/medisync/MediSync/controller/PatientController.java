@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public class PatientController {
     }
 
     @PutMapping("/{patientId}/")
+    @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<PatientDto> updatePatient(
             @PathVariable Long patientId,
             @Valid @RequestBody PatientUpdateDto patientUpdateDto) {
@@ -47,12 +49,14 @@ public class PatientController {
     }
 
     @PutMapping("/{patientId}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deactivatePatient(@PathVariable Long patientId) {
         patientService.deactivatePatient(patientId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PutMapping("/{patientId}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> activatePatient(@PathVariable Long patientId) {
         patientService.activatePatient(patientId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
