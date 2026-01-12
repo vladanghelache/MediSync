@@ -6,6 +6,7 @@ import com.medisync.MediSync.dto.PatientRegistrationDto;
 import com.medisync.MediSync.dto.PatientUpdateDto;
 import com.medisync.MediSync.service.AppointmentService;
 import com.medisync.MediSync.service.PatientService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -24,6 +26,7 @@ public class PatientController {
     private final AppointmentService appointmentService;
 
     @PostMapping
+    @SecurityRequirements()
     public ResponseEntity<String> registerPatient(@Valid @RequestBody PatientRegistrationDto patientRegistrationDto) {
         patientService.registerPatient(patientRegistrationDto);
 
@@ -39,13 +42,15 @@ public class PatientController {
     @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<PatientDto> updatePatient(
             @PathVariable Long patientId,
-            @Valid @RequestBody PatientUpdateDto patientUpdateDto) {
-        return ResponseEntity.ok(patientService.updatePatient(patientId, patientUpdateDto));
+            @Valid @RequestBody PatientUpdateDto patientUpdateDto,
+            Principal principal) {
+        return ResponseEntity.ok(patientService.updatePatient(patientId, patientUpdateDto, principal.getName()));
     }
 
     @GetMapping("/{patientId}/appointments")
-    public ResponseEntity<List<AppointmentDto>> getAppointmentsByPatientId(@PathVariable Long patientId) {
-        return ResponseEntity.ok(appointmentService.getPatientAppointments(patientId));
+    public ResponseEntity<List<AppointmentDto>> getAppointmentsByPatientId(@PathVariable Long patientId,
+                                                                           Principal principal) {
+        return ResponseEntity.ok(appointmentService.getPatientAppointments(patientId, principal.getName()));
     }
 
     @PutMapping("/{patientId}/deactivate")

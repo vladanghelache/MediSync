@@ -41,7 +41,7 @@ public class DoctorService {
 
     public List<DoctorDto> getDoctors(Long departmentId, boolean deactivated) {
         if (departmentId == null) {
-            return doctorRepository.findAllByUserIsActive(deactivated).stream()
+            return doctorRepository.findAllByUserIsActive(!deactivated).stream()
                     .map(DoctorDto::mapToDto).toList();
         }
         if(!departmentRepository.existsById(departmentId)) {

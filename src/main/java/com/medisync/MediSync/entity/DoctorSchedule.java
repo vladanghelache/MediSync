@@ -9,7 +9,7 @@ import java.time.LocalTime;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "doctor_schedule", uniqueConstraints = {
+@Table(name = "doctor_schedules", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"doctor_id", "dayOfWeek"})
 })
 @Data

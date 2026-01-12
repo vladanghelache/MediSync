@@ -54,9 +54,21 @@ public class AppointmentService {
         return AppointmentDto.mapToDto(appointment);
     }
 
-    public List<AppointmentDto> getPatientAppointments(Long patientId) {
+    public List<AppointmentDto> getPatientAppointments(Long patientId, String currentUserEmail) {
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient with id=" + patientId + " not found."));
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        boolean isPatient = currentUser.getRole() == Role.PATIENT;
+        boolean isOwnerPatient = patient.getUser().getEmail().equals(currentUserEmail);
+
+        if (isPatient && !isOwnerPatient) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You are not authorized to access this resource."
+            );
+        }
 
         List<Appointment> appointments = appointmentRepository.findByPatient(patient);
         return appointments.stream().map(AppointmentDto::mapToDto).toList();

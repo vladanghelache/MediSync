@@ -77,10 +77,20 @@ public class PatientService {
     }
 
     @Transactional
-    public PatientDto updatePatient(Long patientId, PatientUpdateDto patientUpdateDto) {
+    public PatientDto updatePatient(Long patientId, PatientUpdateDto patientUpdateDto, String currentUserEmail) {
         Patient patient = patientRepository.findById(patientId).orElseThrow(
                 () -> new ResourceNotFoundException("Patient with id=" + patientId + " not found!")
         );
+
+        if (!userRepository.existsByEmail(currentUserEmail)){
+            throw new IllegalStateException("There is no account associated with this email: " + currentUserEmail);
+        }
+
+        if (!patient.getUser().getEmail().equals(currentUserEmail)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You are not authorized to access perform this action."
+            );
+        }
 
         patient.setFirstName(patientUpdateDto.getFirstName());
         patient.setLastName(patientUpdateDto.getLastName());
