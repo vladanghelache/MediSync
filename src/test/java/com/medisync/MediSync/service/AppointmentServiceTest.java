@@ -105,15 +105,18 @@ class AppointmentServiceTest {
     void getPatientAppointments_Success() {
         when(patientRepository.findById(2L)).thenReturn(Optional.of(patient));
         when(appointmentRepository.findByPatient(patient)).thenReturn(List.of(appointment));
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(appointment.getPatient().getUser()));
 
-        List<AppointmentDto> results = appointmentService.getPatientAppointments(2L);
+        List<AppointmentDto> results = appointmentService.getPatientAppointments(2L,
+                appointment.getPatient().getUser().getEmail());
         assertThat(results).hasSize(1);
     }
 
     @Test
     void getPatientAppointments_PatientNotFound() {
         when(patientRepository.findById(99L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> appointmentService.getPatientAppointments(99L))
+        assertThatThrownBy(() -> appointmentService.getPatientAppointments(99L,
+                appointment.getPatient().getUser().getEmail()))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 

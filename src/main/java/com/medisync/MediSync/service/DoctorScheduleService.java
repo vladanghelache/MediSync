@@ -61,10 +61,14 @@ public class DoctorScheduleService {
     }
 
 
-    public void deleteSchedule(Long scheduleId) {
-        if (!doctorScheduleRepository.existsById(scheduleId)) {
-            throw new ResourceNotFoundException("Schedule not found");
+    public void deleteSchedule(Long scheduleId, Long doctorId) {
+        DoctorSchedule doctorSchedule = doctorScheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule with id " + scheduleId + " not found"));
+
+        if (!doctorSchedule.getDoctor().getId().equals(doctorId)) {
+            throw new IllegalStateException("Schedule does  not belong to doctor");
         }
+
         doctorScheduleRepository.deleteById(scheduleId);
     }
 }
