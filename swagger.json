@@ -46,6 +46,10 @@
       "description": "Patient self-registration, profile management, and medical history access."
     },
     {
+      "name": "Departments",
+      "description": "Management of hospital departments (e.g., Cardiology, Neurology)."
+    },
+    {
       "name": "Users",
       "description": "General user account operations, including password management."
     }
@@ -553,6 +557,125 @@
         }
       }
     },
+    "/api/departments/{id}": {
+      "get": {
+        "tags": [
+          "Departments"
+        ],
+        "summary": "Get department details",
+        "description": "Retrieves information about a specific department.",
+        "operationId": "getDepartmentById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the department",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved department",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Department not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Departments"
+        ],
+        "summary": "Update department",
+        "description": "Modifies an existing department's details. Requires ADMIN role.",
+        "operationId": "updateDepartment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the department to update",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentUpdateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Department updated successfully",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Requires ADMIN role"
+          },
+          "404": {
+            "description": "Department not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Departments"
+        ],
+        "summary": "Delete department",
+        "description": "Removes a department. Note: Cannot delete if doctors are currently assigned to it. Requires ADMIN role.",
+        "operationId": "deleteDepartment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the department to delete",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Department deleted successfully (No Content)"
+          },
+          "403": {
+            "description": "Forbidden - Requires ADMIN role"
+          },
+          "404": {
+            "description": "Department not found"
+          },
+          "409": {
+            "description": "Conflict - Cannot delete department with assigned doctors"
+          }
+        }
+      }
+    },
     "/api/appointments/{appointmentId}/no-show": {
       "put": {
         "tags": [
@@ -952,6 +1075,67 @@
           },
           "400": {
             "description": "Invalid input (e.g., email already exists)"
+          },
+          "403": {
+            "description": "Forbidden - Requires ADMIN role"
+          }
+        }
+      }
+    },
+    "/api/departments": {
+      "get": {
+        "tags": [
+          "Departments"
+        ],
+        "summary": "List all departments",
+        "description": "Retrieves a list of all available medical departments.",
+        "operationId": "getAllDepartments",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved list",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DepartmentDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Departments"
+        ],
+        "summary": "Create department",
+        "description": "Adds a new department to the hospital. Requires ADMIN role.",
+        "operationId": "createDepartment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentCreateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Department created successfully",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input (e.g., missing name)"
           },
           "403": {
             "description": "Forbidden - Requires ADMIN role"
@@ -1734,6 +1918,47 @@
           }
         }
       },
+      "DepartmentUpdateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "departmentHeadId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "DepartmentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "departmentHeadId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "departmentHeadName": {
+            "type": "string"
+          }
+        }
+      },
       "AppointmentDto": {
         "type": "object",
         "properties": {
@@ -1918,6 +2143,21 @@
           "lastName",
           "password",
           "specialization"
+        ]
+      },
+      "DepartmentCreateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
         ]
       },
       "CredentialsDto": {

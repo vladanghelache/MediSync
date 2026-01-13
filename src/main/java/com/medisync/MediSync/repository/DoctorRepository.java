@@ -21,4 +21,6 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
     Collection<Doctor> findByDepartmentIdAndUserIsActive(Long departmentId, boolean isActive);
 
     boolean existsByIdAndUserIsActive(Long doctorId,  boolean isActive);
+
+    boolean existsByDepartmentId(Long id);
 }
