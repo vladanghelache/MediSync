@@ -42,6 +42,10 @@
       "description": "Endpoints for booking, viewing, and managing medical appointments."
     },
     {
+      "name": "Admin Management",
+      "description": "Operations for system administrators to manage other admins and view system stats."
+    },
+    {
       "name": "Patients",
       "description": "Patient self-registration, profile management, and medical history access."
     },
@@ -1327,6 +1331,64 @@
         }
       }
     },
+    "/api/admins": {
+      "get": {
+        "tags": [
+          "Admin Management"
+        ],
+        "summary": "List all admins",
+        "description": "Retrieves a list of all users with ADMIN role.",
+        "operationId": "getAllAdmins",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin Management"
+        ],
+        "summary": "Register new admin",
+        "description": "Creates a new system administrator account.",
+        "operationId": "registerAdmin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminRegistrationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Admin created successfully",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or email already exists"
+          }
+        }
+      }
+    },
     "/api/users/change-password": {
       "patch": {
         "tags": [
@@ -1600,6 +1662,38 @@
           },
           "404": {
             "description": "Appointment not found"
+          }
+        }
+      }
+    },
+    "/api/admins/{adminId}": {
+      "delete": {
+        "tags": [
+          "Admin Management"
+        ],
+        "summary": "Delete admin",
+        "description": "Removes an administrator account. NOTE: You cannot delete yourself.",
+        "operationId": "deleteAdmin",
+        "parameters": [
+          {
+            "name": "adminId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Admin deleted successfully"
+          },
+          "400": {
+            "description": "Bad Request (e.g., trying to delete yourself)"
+          },
+          "404": {
+            "description": "Admin not found"
           }
         }
       }
@@ -2213,22 +2307,23 @@
           "reason"
         ]
       },
-      "ChangePasswordDto": {
+      "AdminRegistrationDto": {
         "type": "object",
         "properties": {
-          "currentPassword": {
+          "email": {
             "type": "string",
+            "format": "email",
             "minLength": 1
           },
-          "newPassword": {
+          "password": {
             "type": "string",
             "minLength": 1,
             "pattern": "^(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&()+=_-])(?=\\S+$).{8,}$"
           }
         },
         "required": [
-          "currentPassword",
-          "newPassword"
+          "email",
+          "password"
         ]
       },
       "UserDto": {
@@ -2248,6 +2343,24 @@
             "type": "boolean"
           }
         }
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "minLength": 1
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&()+=_-])(?=\\S+$).{8,}$"
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
       }
     },
     "securitySchemes": {
